@@ -1,0 +1,85 @@
+
+<div class="content">
+    {% if comment.trashed() %}
+        <div class="alert alert-warning" role="alert">Warning! You're editing a deleted comment.</div>
+    {% endif %}
+
+    {{ form_open() }}
+        <!-- Passable fields -->
+        <input type="hidden" name="mode" value="save" />
+        <input type="hidden" name="comment_id" value="{{ comment.id }}" />
+
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="is_pinned" {% if comment.is_pinned %}checked="checked"{% endif %} value="1" />
+                    Pinned?
+                    <span class="help-block">Should this comment be pinned at the top of the thread?</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>How do you rate this post?</label>
+            <div class="star-rating settable">
+                {% for i in 0..4 %}
+                    <span class="fa fa-star {% if comment.rating > i %}checked{% endif %}"></span>
+                {% endfor %}
+                <input type="hidden" name="rating" value="{{ comment.rating }}" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Status</label>
+            <select name="status" class="form-control">
+                {% for status in comment.status_list %}
+                    <option value="{{ status }}" {% if status == comment.status %}selected="selected"{% endif %} >{{ status|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if not comment.author %}
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="author_name" value="{{ comment.author_name }}" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" name="author_email" value="{{ comment.author_email }}" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="form-group">
+            <label>Content</label>
+            <textarea rows="5" name="content" class="form-control">{{ comment.content }}</textarea>
+        </div>
+
+        {# Footer actions #}
+        <div class="actions text-right">
+            {% if not comment.trashed() %}
+                <button href="javascript:;" data-request="{{ __SELF__ }}::onUpdate" data-request-data="mode: 'delete-reason'" data-request-update="'{{ __SELF__ }}::comment': '.commentable .comment-{{ comment.id }}'" class="btn btn-danger delete pull-left">
+                    Delete
+                </button>
+            {% endif %}
+
+            <button href="javascript:;" data-request="{{ __SELF__ }}::onUpdate" data-request-data="mode: 'view'" data-request-update="'{{ __SELF__ }}::comment': '.commentable .comment-{{ comment.id }}'" class="btn btn-default cancel">
+                Cancel
+            </button>
+
+            <button data-request="{{ __SELF__ }}::onUpdate" data-request-update="'{{ __SELF__ }}::comment': '.commentable .comment-{{ comment.id }}'" class="btn btn-primary save">
+                Save
+            </button>
+
+            {% if comment.trashed() and comment.canRestore %}
+                <button data-request="{{ __SELF__ }}::onUpdate" data-request-data="restore: 1" data-request-update="'{{ __SELF__ }}::comment': '.commentable .comment-{{ comment.id }}'" class="btn btn-primary save">
+                    Save &amp; Restore
+                </button>
+            {% endif %}
+        </div>
+    {{ form_close() }}
+</div>

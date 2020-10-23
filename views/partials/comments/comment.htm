@@ -1,0 +1,50 @@
+<div class="media-left">
+    <img src="{{ comment.getAvatarThumb(48) }}">
+</div>
+<div class="media-body">
+    {% if mode == 'delete-reason' %}
+        {% partial __SELF__ ~ "::commentDelete" %}
+    {% elseif mode == "edit" %}
+        {% partial __SELF__ ~ "::commentEdit" %}
+    {% else %}
+        <h4 class="media-heading submitted">
+            {% if comment.is_pinned %}
+                <i class="fas fa-thumbtack"></i>
+            {% endif %}
+
+            {{ comment.authorName }}
+        </h4>
+        <div class="meta">
+            {% if comment.rating > 0 %}
+                <div class="star-rating">
+                    {% for i in 0..4 %}
+                        <span class="fa fa-star {% if comment.rating > i %}checked{% endif %}"></span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <span class="date"><a href="{{ comment.url }}#commentable-comment-{{ comment.id }}">{{ comment.created_at.diffForHumans() }}</a></span>
+            {% if comment.trashed() %}
+                <span class="trashed"><span class="badge alert-danger">deleted: {{ comment.deleted_reason }}</span></span>
+            {% else %}
+                {% if comment.status != 'public' %}
+                    <span class="status"><span class="badge {{ comment.status == 'pending' ? 'alert-warning'}}">{{ comment.status }}</span></span>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if not comment.trashed() %}
+            <div class="content">
+                {{ comment.renderedContent|raw }}
+            </div>
+        {% endif %}
+
+        {% partial __SELF__ ~ "::commentActions" comment_id=comment.id %}
+
+        {% if comment.getChildren().count() > 0 %}
+            {% if __SELF__.property('max_depth') == 0 or comment.nest_depth + 1 < __SELF__.property('max_depth') %}
+                {# we can go deeper #}
+                {% partial __SELF__ ~ "::comments" comments=comment.getChildren() %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>
